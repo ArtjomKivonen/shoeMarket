@@ -5,17 +5,39 @@
 package entities;
 
 import java.util.Date;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 /**
  *
  * @author artie
  */
+@Entity
 public class Purchase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    @OneToOne
     private Shoe shoe;
+    @OneToOne
     private Customer customer;
+    @Temporal(TemporalType.TIMESTAMP)
     private Date purchaseDate;
     private int cost;
 
+    public Long getId() {
+    return id;
+  }
+
+  public void setId(Long id) {
+    this.id = id;
+  }
     public Shoe getShoe() {
         return shoe;
     }

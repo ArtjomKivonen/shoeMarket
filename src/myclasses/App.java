@@ -4,9 +4,12 @@
  */
 package myclasses;
 
+import datatools.BaseSaver;
+import datatools.FileSaver;
 import entities.Customer;
 import entities.Purchase;
 import entities.Shoe;
+import interfaces.Retentive;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
@@ -22,10 +25,12 @@ public class App {
     List<Shoe> shoes = new ArrayList<>();
     List<Customer> customers = new ArrayList<>();
     List<Purchase> purchases = new ArrayList<>();
-    
+//    Retentive saver = new FileSaver();
+    Retentive saver = new BaseSaver();
     public App(){
-        
-        
+        shoes = saver.loadShoes();
+        customers = saver.loadCustomers();
+        purchases = saver.loadPurchases();
         
     }
     
@@ -111,9 +116,6 @@ public class App {
             customer.setFname(scanner.nextLine());
             System.out.println("Введите фамилию покупателя:");
             customer.setLname(scanner.nextLine());
-            System.out.println("Введите id покупателя:");
-            customer.setId(scanner.nextInt());
-            scanner.nextLine();
             System.out.println("Введите количество денег покупателя(eurocents):");
             customer.setFunds(scanner.nextInt());
             scanner.nextLine();
