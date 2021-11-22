@@ -48,6 +48,10 @@ public class App {
             System.out.println("4: Список зарегистрированных покупателей");
             System.out.println("5: Покупка покупателем обуви");
             System.out.println("6: Доход магазина за все время работы");
+            System.out.println("7: Доход магазина за указанный месяц");
+            System.out.println("8: Редактировать товар магазина");
+            System.out.println("9: Редактировать покупателя");
+            
             
             int menu = intInputCheck();
             scanner.nextLine();
@@ -61,7 +65,7 @@ public class App {
                 
                 case 1:
                     System.out.println("Добавление модели");
-                    shoes.add(addShoe());
+                    addShoe();
                     break;
                      
                 case 2:
@@ -71,7 +75,7 @@ public class App {
                 
                 case 3:
                     System.out.println("Добавление покупателя");
-                    customers.add(addCustomer());
+                    addCustomer();
                     break;
                 case 4:
                     printListCustomers();
@@ -85,23 +89,23 @@ public class App {
                     System.out.println("Доход магазина за время работа="+countIncome+" euro");
                     break;
                 case 7:
-                    
+                    countIncomeMonth();
                     break;
                 case 8:
                     editShoe();
                     break;
                     
                 case 9:
-                    
+                    editCustomer();
                     break;
             }
             
             }while("y".equals(appLive));
         }
     
-        private Shoe addShoe(){
+        private void addShoe(){
             System.out.println("Добавление модели обуви");
-//            if(quit()) return;
+            if(quit()) return;
             Shoe shoe = new Shoe();
             System.out.println("Название модели:");
             shoe.setName(scanner.nextLine());
@@ -110,26 +114,29 @@ public class App {
             System.out.println("Цена модели:");
             shoe.setPrice(intInputCheck());
             scanner.nextLine();
-            return shoe;
+            shoes.add(shoe);
+            saver.saveShoes(shoes);
         }
         
-        private Customer addCustomer(){
+        private void addCustomer(){
+            System.out.println("Добавление покупателя");
+            if(quit()) return;
             Customer customer = new Customer();
             System.out.println("Введите имя покупателя:");
             customer.setFname(scanner.nextLine());
             System.out.println("Введите фамилию покупателя:");
             customer.setLname(scanner.nextLine());
             System.out.println("Введите количество денег покупателя(eurocents):");
-            customer.setFunds(scanner.nextInt());
+            customer.setFunds(intInputCheck());
             scanner.nextLine();
-            return customer;
+            customers.add(customer);
+            saver.saveCustomers(customers);
         }
         private void addPurchase(){
             System.out.println("Добавление покупки");
             if(quit()) return;
             Purchase purchase = new Purchase();
             Set<Integer> setNumbersShoes = printListShoes();
-            
             if(setNumbersShoes.isEmpty()) {
                 return;
             }
@@ -138,17 +145,23 @@ public class App {
             purchase.setShoe(shoes.get(shoeNum-1));
             purchase.setCost(shoes.get(shoeNum-1).getPrice());
             System.out.println();
-            
             Set<Integer> setNumbersCustomers = printListCustomers();
-            
             System.out.println("Введите номер покупателя: ");
-            int customerNum = scanner.nextInt();scanner.nextLine();
+            int customerNum = chooseFromList(setNumbersCustomers);scanner.nextLine();
+            if(customers.get(customerNum - 1).getFunds() < shoes.get(shoeNum - 1).getPrice()){
+                System.out.println("Недостаточно денег у покупателя, покупка не оформлена");
+                return;
+            }
             purchase.setCustomer(customers.get(customerNum-1));
             System.out.println();
+            customers.get(customerNum - 1).setFunds
+                    (customers.get(customerNum - 1).getFunds()
+                            - shoes.get(shoeNum - 1).getPrice());
             Calendar c = new GregorianCalendar();
             purchase.setPurchaseDate(c.getTime());
-                   
-            
+            purchase.setCost(shoes.get(shoeNum - 1).getPrice());
+            purchases.add(purchase);
+            saver.savePurchases(purchases);
         
         }
         private double incomeCount(){
@@ -203,10 +216,6 @@ public class App {
         return setNumbersShoes;    
     }
 
-    private void printListBoots() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
     private Set<Integer> printListCustomers() {
         System.out.println("Список покупателей: ");
         Set<Integer> setNumbersCustomers = new HashSet<>();
@@ -232,9 +241,72 @@ public class App {
         }
         System.out.println("Выберите номер модели из списка: ");
         int chooseNum = chooseFromList(setNumbersShoes);
-    
-    
+        System.out.println("Название модели: "+shoes.get(chooseNum - 1).getName());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        int change = chooseFromList(changeNumber);
+        if(change == 1){
+            System.out.println("Введите новое название модели обуви: ");
+            shoes.get(chooseNum - 1).setName(scanner.nextLine());
+        }
+        System.out.println("Бренд обуви: "+shoes.get(chooseNum - 1).getBrand());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        change = chooseFromList(changeNumber);
+        if(change == 1){
+            System.out.println("Введите новый бренд обуви: ");
+            shoes.get(chooseNum - 1).setBrand(scanner.nextLine());
+        }
+        System.out.println("Цена модели: "+shoes.get(chooseNum - 1).getPrice());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        change = chooseFromList(changeNumber);
+        if (change == 1){
+            System.out.println("Введите новую цену обуви");
+            shoes.get(chooseNum - 1).setPrice(intInputCheck());
+        }
+        saver.saveShoes(shoes);
     }
 
-    
+    private void editCustomer() {
+        Set<Integer> changeNumber = new HashSet<>();
+        changeNumber.add(1);
+        changeNumber.add(2);
+        System.out.println("---Изменение имени покупателя---");
+        Set<Integer> setNumbersCustomers = printListShoes();
+        if(setNumbersCustomers.isEmpty()) return;
+        int chooseNum = chooseFromList(setNumbersCustomers);
+        System.out.println("Имя покупателя: "+customers.get(chooseNum - 1).getFname());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        int change = chooseFromList(changeNumber);
+        if(change == 1){
+            System.out.println("Введите новое имя покупателя: ");
+            customers.get(chooseNum - 1).setFname(scanner.nextLine());
+        }
+        System.out.println("---Изменение фамилии покупателя---");
+        System.out.println("Фамилия покупателя: "+customers.get(chooseNum - 1).getLname());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        change = chooseFromList(changeNumber);
+        if(change == 1){
+            System.out.println("Введите новую фамилию покупателя: ");
+            customers.get(chooseNum - 1).setLname(scanner.nextLine());
+        }
+        System.out.println("---Изменение количества денег покупателя---");
+        System.out.println("Количество денег покупателя: "+customers.get(chooseNum - 1).getFunds());
+        System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
+        change = chooseFromList(changeNumber);
+        if(change == 1){
+            System.out.println("Введите новое количество денег покупателя: ");
+            customers.get(chooseNum - 1).setFunds(intInputCheck());
+        }
+        saver.saveCustomers(customers);
+    }
+
+    private void countIncomeMonth() {
+        double incomeMonth = 0;
+        for (int i = 0; i < purchases.size(); i++) {
+            if(purchases.get(i) != null){
+                incomeMonth = incomeMonth + purchases.get(i).getCost();
+            }
+        }
+        incomeMonth = incomeMonth / 100;
+        System.out.println("Доход магазина за указанный месяц: "+incomeMonth);
+    }
 }
