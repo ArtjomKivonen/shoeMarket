@@ -12,6 +12,7 @@ import entities.Shoe;
 import interfaces.Retentive;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
@@ -24,13 +25,19 @@ import javax.print.attribute.HashAttributeSet;
  * @author artie
  */
 public class App {
+    public static boolean isBase;
     Scanner scanner = new Scanner(System.in);
     List<Shoe> shoes = new ArrayList<>();
     List<Customer> customers = new ArrayList<>();
     List<Purchase> purchases = new ArrayList<>();
 //    Retentive saver = new FileSaver();
-    Retentive saver = new BaseSaver();
+    Retentive saver;
     public App(){
+//        if(App.isBase){
+//            saver = new BaseSaver();
+//        }else{
+            saver = new FileSaver();
+//        }
         shoes = saver.loadShoes();
         customers = saver.loadCustomers();
         purchases = saver.loadPurchases();
@@ -54,34 +61,26 @@ public class App {
             
             
             int menu = intInputCheck();
-            scanner.nextLine();
+            
             
             switch (menu){
             
                 case 0:
                     appLive="q";
-                    System.out.println("Программа закончена");
                     break;
-                
                 case 1:
-                    System.out.println("Добавление модели");
                     addShoe();
                     break;
-                     
                 case 2:
                     printListShoes();
                     break;
-                    
-                
                 case 3:
-                    System.out.println("Добавление покупателя");
                     addCustomer();
                     break;
                 case 4:
                     printListCustomers();
                     break;
                 case 5:
-                    System.out.println("Покупка покупателем обуви");
                     addPurchase();
                     break;
                 case 6:
@@ -113,7 +112,6 @@ public class App {
             shoe.setBrand(scanner.nextLine());
             System.out.println("Цена модели:");
             shoe.setPrice(intInputCheck());
-            scanner.nextLine();
             shoes.add(shoe);
             saver.saveShoes(shoes);
         }
@@ -128,7 +126,6 @@ public class App {
             customer.setLname(scanner.nextLine());
             System.out.println("Введите количество денег покупателя(eurocents):");
             customer.setFunds(intInputCheck());
-            scanner.nextLine();
             customers.add(customer);
             saver.saveCustomers(customers);
         }
@@ -141,13 +138,13 @@ public class App {
                 return;
             }
             System.out.println("Введие номер модели: ");
-            int shoeNum = chooseFromList(setNumbersShoes);scanner.nextLine();
+            int shoeNum = chooseFromList(setNumbersShoes);
             purchase.setShoe(shoes.get(shoeNum-1));
             purchase.setCost(shoes.get(shoeNum-1).getPrice());
             System.out.println();
             Set<Integer> setNumbersCustomers = printListCustomers();
             System.out.println("Введите номер покупателя: ");
-            int customerNum = chooseFromList(setNumbersCustomers);scanner.nextLine();
+            int customerNum = chooseFromList(setNumbersCustomers);
             if(customers.get(customerNum - 1).getFunds() < shoes.get(shoeNum - 1).getPrice()){
                 System.out.println("Недостаточно денег у покупателя, покупка не оформлена");
                 return;
@@ -270,7 +267,7 @@ public class App {
         changeNumber.add(1);
         changeNumber.add(2);
         System.out.println("---Изменение имени покупателя---");
-        Set<Integer> setNumbersCustomers = printListShoes();
+        Set<Integer> setNumbersCustomers = printListCustomers();
         if(setNumbersCustomers.isEmpty()) return;
         int chooseNum = chooseFromList(setNumbersCustomers);
         System.out.println("Имя покупателя: "+customers.get(chooseNum - 1).getFname());
@@ -300,13 +297,20 @@ public class App {
     }
 
     private void countIncomeMonth() {
+        System.out.println(purchases.get(0).getPurchaseDate());
         double incomeMonth = 0;
+        Calendar c = new GregorianCalendar();
+        Date todaysDate = c.getTime();
+        int todaysMonth = todaysDate.getMonth();
+        int todaysYear = todaysDate.getYear();
         for (int i = 0; i < purchases.size(); i++) {
-            if(purchases.get(i) != null){
+            if(purchases.get(i) != null &&
+                    todaysMonth == purchases.get(i).getPurchaseDate().getMonth() &&
+                    todaysYear == purchases.get(i).getPurchaseDate().getYear()){
                 incomeMonth = incomeMonth + purchases.get(i).getCost();
             }
         }
         incomeMonth = incomeMonth / 100;
-        System.out.println("Доход магазина за указанный месяц: "+incomeMonth);
+        System.out.println("Доход магазина за указанный месяц в euro: "+incomeMonth);
     }
 }

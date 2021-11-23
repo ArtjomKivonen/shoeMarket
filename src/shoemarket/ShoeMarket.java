@@ -15,6 +15,12 @@ public class ShoeMarket {
 
 
     public static void main(String[] args) {
+        if(args.length==0){
+            App.isBase = true;
+        }else{
+            App.isBase = false;
+        }
+        
         App app = new App();
         app.run();
         
