@@ -22,14 +22,10 @@ import javax.persistence.Persistence;
  */
 public class BaseSaver implements Retentive {
   
-    private final EntityManager em;
-    private final EntityTransaction tx;
-    public BaseSaver(){
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("ShoeMarketPU");
-        em = emf.createEntityManager();
-        tx = em.getTransaction();
-        
-    } 
+    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("ShoeMarketPU");
+    private EntityManager em = emf.createEntityManager();;
+    private EntityTransaction tx = em.getTransaction();
+
     
     
 
@@ -45,7 +41,6 @@ public class BaseSaver implements Retentive {
               em.persist(shoe);
              }
            }
-    em.persist(shoes);
     tx.commit();
     
     
@@ -73,7 +68,6 @@ public class BaseSaver implements Retentive {
               em.persist(customer);
              }
            }
-    em.persist(customers);
     tx.commit();
     
   }
@@ -100,7 +94,6 @@ public class BaseSaver implements Retentive {
               em.persist(purchase);
              }
            }
-    em.persist(purchases);
     tx.commit();
     
   }

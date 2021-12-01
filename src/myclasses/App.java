@@ -19,6 +19,10 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 import javax.print.attribute.HashAttributeSet;
+import facade.ShoeFacade;
+import facade.CustomerFacade;
+import facade.PurchaseFacade;
+
 
 /**
  *
@@ -27,20 +31,23 @@ import javax.print.attribute.HashAttributeSet;
 public class App {
     public static boolean isBase;
     Scanner scanner = new Scanner(System.in);
-    List<Shoe> shoes = new ArrayList<>();
-    List<Customer> customers = new ArrayList<>();
-    List<Purchase> purchases = new ArrayList<>();
+//    List<Shoe> shoes = new ArrayList<>();
+//    List<Customer> customers = new ArrayList<>();
+//    List<Purchase> purchases = new ArrayList<>();
+    private ShoeFacade shoeFacade = new ShoeFacade(Shoe.class);
+    private CustomerFacade customerFacade = new CustomerFacade(Customer.class);
+    private PurchaseFacade purchaseFacade = new PurchaseFacade(Purchase.class);
 //    Retentive saver = new FileSaver();
     Retentive saver;
     public App(){
-//        if(App.isBase){
-//            saver = new BaseSaver();
-//        }else{
+        if(App.isBase){
+            saver = new BaseSaver();
+        }else{
             saver = new FileSaver();
-//        }
-        shoes = saver.loadShoes();
-        customers = saver.loadCustomers();
-        purchases = saver.loadPurchases();
+        }
+//        shoes = saver.loadShoes();
+//        customers = saver.loadCustomers();
+//        purchases = saver.loadPurchases();
         
     }
     
@@ -112,8 +119,7 @@ public class App {
             shoe.setBrand(scanner.nextLine());
             System.out.println("Цена модели:");
             shoe.setPrice(intInputCheck());
-            shoes.add(shoe);
-            saver.saveShoes(shoes);
+            shoeFacade.create(shoe);
         }
         
         private void addCustomer(){
@@ -126,8 +132,7 @@ public class App {
             customer.setLname(scanner.nextLine());
             System.out.println("Введите количество денег покупателя(eurocents):");
             customer.setFunds(intInputCheck());
-            customers.add(customer);
-            saver.saveCustomers(customers);
+            customerFacade.create(customer);
         }
         private void addPurchase(){
             System.out.println("Добавление покупки");
@@ -139,30 +144,30 @@ public class App {
             }
             System.out.println("Введие номер модели: ");
             int shoeNum = chooseFromList(setNumbersShoes);
-            purchase.setShoe(shoes.get(shoeNum-1));
-            purchase.setCost(shoes.get(shoeNum-1).getPrice());
+            purchase.setShoe(shoeFacade.find((long)shoeNum));
+            purchase.setCost(shoeFacade.find((long)shoeNum).getPrice());
             System.out.println();
             Set<Integer> setNumbersCustomers = printListCustomers();
             System.out.println("Введите номер покупателя: ");
             int customerNum = chooseFromList(setNumbersCustomers);
-            if(customers.get(customerNum - 1).getFunds() < shoes.get(shoeNum - 1).getPrice()){
+            if(customerFacade.find((long)customerNum).getFunds() < shoeFacade.find((long)shoeNum).getPrice()){
                 System.out.println("Недостаточно денег у покупателя, покупка не оформлена");
                 return;
             }
-            purchase.setCustomer(customers.get(customerNum-1));
+            purchase.setCustomer(customerFacade.find((long)customerNum));
             System.out.println();
-            customers.get(customerNum - 1).setFunds
-                    (customers.get(customerNum - 1).getFunds()
-                            - shoes.get(shoeNum - 1).getPrice());
+            customerFacade.find((long)customerNum).setFunds
+                    (customerFacade.find((long)customerNum).getFunds()
+                            - shoeFacade.find((long)shoeNum).getPrice());
             Calendar c = new GregorianCalendar();
             purchase.setPurchaseDate(c.getTime());
-            purchase.setCost(shoes.get(shoeNum - 1).getPrice());
-            purchases.add(purchase);
-            saver.savePurchases(purchases);
+            purchase.setCost(shoeFacade.find((long)shoeNum).getPrice());
+            purchaseFacade.create(purchase);
         
         }
         private double incomeCount(){
             double income=0;
+            List<Purchase> purchases = purchaseFacade.findAll();
             for (int i = 0; i < purchases.size(); i++) {
                 if(purchases.get(i)!=null){
                     income=income+purchases.get(i).getCost();
@@ -203,6 +208,7 @@ public class App {
 
     private Set<Integer> printListShoes() {
         System.out.println("Список моделей обуви: ");
+            List<Shoe> shoes = shoeFacade.findAll();
             Set<Integer> setNumbersShoes = new HashSet<>();
             for (int i = 0; i < shoes.size(); i++) {
                 if(shoes.get(i) != null){
@@ -215,6 +221,7 @@ public class App {
 
     private Set<Integer> printListCustomers() {
         System.out.println("Список покупателей: ");
+        List<Customer> customers = customerFacade.findAll();
         Set<Integer> setNumbersCustomers = new HashSet<>();
             for (int i = 0; i < customers.size(); i++) {
                 if(customers.get(i) != null){
@@ -238,28 +245,29 @@ public class App {
         }
         System.out.println("Выберите номер модели из списка: ");
         int chooseNum = chooseFromList(setNumbersShoes);
-        System.out.println("Название модели: "+shoes.get(chooseNum - 1).getName());
+        Shoe shoe = shoeFacade.find((long)chooseNum);
+        System.out.println("Название модели: "+shoeFacade.find((long)chooseNum).getName());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         int change = chooseFromList(changeNumber);
         if(change == 1){
             System.out.println("Введите новое название модели обуви: ");
-            shoes.get(chooseNum - 1).setName(scanner.nextLine());
+            shoeFacade.find((long)chooseNum).setName(scanner.nextLine());
         }
-        System.out.println("Бренд обуви: "+shoes.get(chooseNum - 1).getBrand());
+        System.out.println("Бренд обуви: "+shoeFacade.find((long)chooseNum).getBrand());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         change = chooseFromList(changeNumber);
         if(change == 1){
             System.out.println("Введите новый бренд обуви: ");
-            shoes.get(chooseNum - 1).setBrand(scanner.nextLine());
+            shoeFacade.find((long)chooseNum).setBrand(scanner.nextLine());
         }
-        System.out.println("Цена модели: "+shoes.get(chooseNum - 1).getPrice());
+        System.out.println("Цена модели: "+shoeFacade.find((long)chooseNum).getPrice());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         change = chooseFromList(changeNumber);
         if (change == 1){
             System.out.println("Введите новую цену обуви");
-            shoes.get(chooseNum - 1).setPrice(intInputCheck());
+            shoeFacade.find((long)chooseNum).setPrice(intInputCheck());
         }
-        saver.saveShoes(shoes);
+        shoeFacade.edit(shoe);
     }
 
     private void editCustomer() {
@@ -270,39 +278,40 @@ public class App {
         Set<Integer> setNumbersCustomers = printListCustomers();
         if(setNumbersCustomers.isEmpty()) return;
         int chooseNum = chooseFromList(setNumbersCustomers);
-        System.out.println("Имя покупателя: "+customers.get(chooseNum - 1).getFname());
+        Customer customer = customerFacade.find((long)chooseNum);
+        System.out.println("Имя покупателя: "+customerFacade.find((long)chooseNum).getFname());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         int change = chooseFromList(changeNumber);
         if(change == 1){
             System.out.println("Введите новое имя покупателя: ");
-            customers.get(chooseNum - 1).setFname(scanner.nextLine());
+            customerFacade.find((long)chooseNum).setFname(scanner.nextLine());
         }
         System.out.println("---Изменение фамилии покупателя---");
-        System.out.println("Фамилия покупателя: "+customers.get(chooseNum - 1).getLname());
+        System.out.println("Фамилия покупателя: "+customerFacade.find((long)chooseNum).getLname());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         change = chooseFromList(changeNumber);
         if(change == 1){
             System.out.println("Введите новую фамилию покупателя: ");
-            customers.get(chooseNum - 1).setLname(scanner.nextLine());
+            customerFacade.find((long)chooseNum).setLname(scanner.nextLine());
         }
         System.out.println("---Изменение количества денег покупателя---");
-        System.out.println("Количество денег покупателя: "+customers.get(chooseNum - 1).getFunds());
+        System.out.println("Количество денег покупателя: "+customerFacade.find((long)chooseNum).getFunds());
         System.out.println("Если хотите изменить - введите 1, пропустить - введите 2");
         change = chooseFromList(changeNumber);
         if(change == 1){
             System.out.println("Введите новое количество денег покупателя: ");
-            customers.get(chooseNum - 1).setFunds(intInputCheck());
+            customerFacade.find((long)chooseNum).setFunds(intInputCheck());
         }
-        saver.saveCustomers(customers);
+        customerFacade.edit(customer);
     }
 
     private void countIncomeMonth() {
-        System.out.println(purchases.get(0).getPurchaseDate());
         double incomeMonth = 0;
         Calendar c = new GregorianCalendar();
         Date todaysDate = c.getTime();
         int todaysMonth = todaysDate.getMonth();
         int todaysYear = todaysDate.getYear();
+        List<Purchase> purchases = purchaseFacade.findAll();
         for (int i = 0; i < purchases.size(); i++) {
             if(purchases.get(i) != null &&
                     todaysMonth == purchases.get(i).getPurchaseDate().getMonth() &&
